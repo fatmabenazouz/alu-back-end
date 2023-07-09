@@ -1,53 +1,27 @@
 #!/usr/bin/python3
-"""Displays tasks information of a given employee
-Trying two lines
-"""
-from requests import get
-from sys import argv
+""" Library to gather data from an API """
 
+import requests
+import sys
 
-def get_data(url):
-    """Utility method to get data from any api endpoint and parse the json
-    params:
-        - url (str) - the URL endpoint
-    """
-    request = get(url)
-
-    if request.get('status_code') == 200:
-        try:
-            return request.json()
-        except:
-            raise Exception("")
-
-
-def main():
-    """The main function from which the whole program starts
-    """
-    # Extract the user id from the script arguments
-    employee_id = argv[1]
-
-    # Getting the name
-    user_url = f'https://jsonplaceholder.typicode.com/users/{employee_id}'
-    name = get_data(user_url).get('name')
-
-    # Getting the todos
-    tasks_url = f'https://jsonplaceholder.typicode.com/todos?userId={employee_id}'
-    todos = get_data(tasks_url)
-
-    total_number_of_todos = len(todos)
-    number_of_completed_todos = 0
-
-    for todo in todos:
-        if todo.get('completed'):
-            number_of_completed_todos += 1
-
-    print(
-        f'Employee {name} is done with tasks({number_of_completed_todos}/{total_number_of_todos})')
-
-    for todo in todos:
-        if todo.get('completed'):
-            print(f'\t {todo.get("title")}')
-
+""" Function to gather data from an API """
 
 if __name__ == "__main__":
-    main()
+    employee_id = sys.argv[1]
+    url = "https://jsonplaceholder.typicode.com/users/{}".format(employee_id)
+
+    todo = "https://jsonplaceholder.typicode.com/todos?userId={}"
+    todo = todo.format(employee_id)
+
+    user_info = requests.request("GET", url).json()
+    todo_info = requests.request("GET", todo).json()
+
+    employee_name = user_info.get("name")
+    total_tasks = list(filter(lambda x: (x["completed"] is True), todo_info))
+    task_com = len(total_tasks)
+    total_task_done = len(todo_info)
+
+    print("Employee {} is done with tasks({}/{}):".format(employee_name,
+          task_com, total_task_done))
+
+    [print("\t {}".format(task.get("title"))) for task in total_tasks]
